@@ -1,0 +1,101 @@
+services:
+  app:
+    build:
+      context: .docker/app
+      dockerfile: Dockerfile.dev
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      # memorydb:
+      #   condition: service_healthy
+      # mailpit:
+      #   condition: service_started
+      # storage:
+      #   condition: service_started
+    env_file: .env
+    networks:
+      - my-app
+  db:
+    image: postgres:16.1-alpine3.18
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_DATABASE}"]
+      interval: 5s
+      retries: 5
+      start_period: 5s
+      timeout: 5s
+    networks:
+      - my-app
+  # memorydb:
+  #   image: redis:6.2-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   command: redis-server --save 20 1 --loglevel warning --requirepass ${DB_MEMORY_PASS}
+  #   volumes:
+  #     - queue:/data
+  #   networks:
+  #     - my-app
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pg@pg.com
+      PGADMIN_DEFAULT_PASSWORD: ${DB_PASS}
+      PGADMIN_LISTEN_PORT: 5050
+    ports:
+      - 5050:5050
+    depends_on:
+      - db
+    networks:
+      - my-app
+  # mailpit:
+  #   image: axllent/mailpit:v1.13
+  #   ports:
+  #     - 8025:8025
+  #     - 1025:1025
+  #   environment:
+  #     MP_MAX_MESSAGES: 5000
+  #     #   MP_SMTP_AUTH_ACCEPT_ANY: 1
+  #     MP_SMTP_AUTH_ALLOW_INSECURE: 1
+  #     MP_SMTP_AUTH: ${MAIL_USERNAME}:${MAIL_PASSWORD}
+  #   networks:
+  #     - my-app
+  # storage:
+  #   image: docker.io/bitnami/minio:2024
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   environment:
+  #     MINIO_ROOT_USER: $STORAGE_USER
+  #     MINIO_ROOT_PASSWORD: $STORAGE_PASS
+  #     MINIO_DEFAULT_BUCKETS: $STORAGE_BUCKET
+  #     MINIO_MAX_OBJECT_SIZE: "10GiB" # Set max upload size (e.g., 10GiB)
+  #   volumes:
+  #     - ./data:/data
+  #   # entrypoint: sh -c 'until mc alias set minio http://localhost:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY; do sleep 5; done && mc mb $DEFAULT_BUCKET'
+  #   # command: server --address ":80" --console-address ":9001" /data
+  #   networks:
+  #     my-app:
+  #       aliases:
+  #         - minio.service.com
+
+networks:
+  my-app:
+
+# volumes:
+#   queue:

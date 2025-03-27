@@ -1,0 +1,28 @@
+{
+  "name": "app",
+  "version": "1.0.50",
+  "scripts": {
+    "test": "bun test --passWithNoTests --runInBand --no-cache",
+    "test:watch": "bun test --watch",
+    "test:staged": "bun test --findRelatedTests",
+    "test:ci": "bun test --coverage",
+    "dev": "bun run --watch src/main/server.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.41.0",
+    "elysia": "latest",
+    "express": "^4.21.2",
+    "framework-do-dede": "^0.0.27",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.14.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/pg": "^8.11.11",
+    "bun-types": "latest",
+    "drizzle-kit": "^0.30.5",
+    "tsx": "^4.19.3"
+  },
+  "module": "src/index.js"
+}
