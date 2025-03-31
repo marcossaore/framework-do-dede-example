@@ -26,8 +26,11 @@ export class Authentication implements HttpMiddleware {
     async execute(input: Input): Promise<any> {
         const token = input.headers['x-api-token']
         if (!token) throw new Unauthorized('Invalid token')
-        const decoded = this.tokenGenerator.decode(token)
+        const decoded = this.tokenGenerator.decode<{ id: number }>(token)
         if (!decoded) throw new Unauthorized('Invalid token')
+        const now  = Date.now()
+        const diff = decoded.expiresAt.getTime() - now;
+        if (diff < 0) throw new Unauthorized('Token expired')
         const user = await this.userRepository.restore(decoded.id)
         if (!user) throw new Unauthorized('Invalid token')
         return { auth: user }

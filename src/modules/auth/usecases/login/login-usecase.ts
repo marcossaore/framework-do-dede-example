@@ -26,9 +26,12 @@ export class Login implements UseCase<Login.Input, Login.Output> {
         const user = await this.userRepository.restoreByEmail(input.email)
         if (!user) throw new Unauthorized('Email or password invalid')
         if (!user.validatePassword(input.password)) throw new Unauthorized('Email or password invalid')
-        const token = this.tokenGenerator.generate({
-            id: user.getId()
-        })
+        const token = this.tokenGenerator.generate(
+            {
+                id: user.getId(),
+            },
+            '1d',
+        )
         return { token }
     }
 }

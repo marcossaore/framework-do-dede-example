@@ -2,11 +2,13 @@ import type { TokenGenerator } from "@/domain/infra/TokenGenerator";
 import { sign, SignOptions, verify } from 'jsonwebtoken'
 
 export class JwtTokenGenerator implements TokenGenerator {
-    
-    constructor(private readonly secret: string) {}
-    decode(token: string) {
+
+    constructor(private readonly secret: string) { }
+    decode<T>(token: string): T & { expiresAt: Date } | null {
         try {
-            return verify(token, this.secret)
+            const verified = verify(token, this.secret);
+            (verified as any).expiresAt = new Date((verified as any).exp * 1000);
+            return verified as T & { expiresAt: Date }
         } catch (error) {
             return null
         }
